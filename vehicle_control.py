@@ -13,7 +13,7 @@ import time
 N_STATES = 50  # state的维度
 N_ACTIONS = 3  # action的维度
 BATCH_SIZE = 64  # 每次从经验池中随机抽取N=64条Transition
-MEMORY_CAPACITY = 200000  # 经验池，存储200000条(si,ai,ri,si+1)后开始训练
+MEMORY_CAPACITY = 200000  # 经验池 (si,ai,ri,si+1)
 GAMMA_REWARD = 0.99  # reward discount 奖励衰减系数 值越大越考虑长期奖励
 TAU = 0.001  # soft replacement 软更新系数
 LR_A = 0.0001  # learning rate for actor Actor网络的学习率 值越大新Q值越重要
@@ -26,9 +26,9 @@ GLOBAL_STEP = 0  # 全局步数
 
 vision = False  # 返回图像标识 False不返回图像
 done = False  # 完成标识
-restor = True  # 恢复模型标识
-is_train = False  # 训练标识
-MODEL_PATH = '/home/azha/Torcs/azha_torcs/ckpt/2_vehicle_control_ddpg_'  # 模型存储路径
+restor = False  # 恢复模型标识
+is_train = True  # 训练标识
+MODEL_PATH = '/home/azha/Torcs/azha_torcs/ckpt/plain_torcs_ddpg_'  # 模型存储路径
 
 RESTORE_MODEL_PATH = '/home/azha/Torcs/azha_torcs/ckpt/vehicle_control_ddpg_2569_1440000.pth'  # 模型加载路径
 np.random.seed(1337)  # 随机数生成
@@ -180,6 +180,7 @@ class DDPG(object):
         self.cost_his_c = []  # 记录损失值
         self.ou = OU()  # 噪声添加选取OU噪声
 
+    # 动作选择
     def choose_action(self, x):
 
         # 将输入处理为tensor
@@ -218,6 +219,7 @@ class DDPG(object):
 
         return action
 
+    # 将一回合经理存储到经验回放池
     def store_transaction(self, s, a, r, s_, done):
         transaction = np.hstack((s, a, [r], s_, [done]))
         # replace the old memory with new memory
@@ -234,7 +236,7 @@ class DDPG(object):
         #     eval('self.Critic_target.' + x + '.data.mul_((1-TAU))')
         #     eval('self.Critic_target.' + x + '.data.add_(TAU*self.Critic_eval.' + x + '.data)')
 
-        # 每次学习前都需要更新网络吗
+        # 软更新网络
         tmp_weight = self.Actor_eval.state_dict()
         for k1, k2 in zip(self.Actor_eval.state_dict(), self.Actor_target.state_dict()):
             tmp_weight[k1].data = TAU * self.Actor_eval.state_dict()[k1].data + (1 - TAU) * \
@@ -247,6 +249,7 @@ class DDPG(object):
                                   self.Critic_target.state_dict()[k2].data
         self.Critic_target.load_state_dict(tmp_weight)
 
+        # 从经验池取出一批次的回放片段
         if self.memory_counter > MEMORY_CAPACITY:
             sample_index = np.random.choice(MEMORY_CAPACITY, size=BATCH_SIZE)
         else:
@@ -263,6 +266,8 @@ class DDPG(object):
         b_r = b_r.cuda()
         b_s_ = b_s_.cuda()
         b_done = b_done.cuda()
+
+
 
         a = self.Actor_eval(b_s)
         q = self.Critic_eval(b_s, a)
@@ -444,7 +449,7 @@ if __name__ == "__main__":
             print("Episode : " + str(EPISODE_COUNT))
 
             if np.mod(i, 100) == 0:
-                # Sometimes you need to relaunch TORCS because of the memory leak error
+                # Sometimes you need to relaunch TORCS because of the memory leak error 重启torcs避免内存泄露
                 ob = env.reset(relaunch=True)
             else:
                 ob = env.reset()
