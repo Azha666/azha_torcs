@@ -379,7 +379,7 @@ if __name__ == "__main__":
 
                 ob_net_ = handle_ob(ob_)
 
-                # DDPG 存储记忆
+                # 将该回合存入经验回放池
                 agent.store_transaction(ob_net, action, reward, ob_net_, done)
 
                 # 控制学习起始时间和频率 (先累积一些记忆再开始学习)
@@ -389,7 +389,7 @@ if __name__ == "__main__":
                 flag = 0
                 if GLOBAL_STEP >= 20000:
                     if GLOBAL_STEP % 10000 == 0:
-                        lateral_offset = offset[int(((GLOBAL_STEP - 10000) / 10000) % 4)]
+                        lateral_offset = offset[int(((GLOBAL_STEP - 10000) / 10000) % 4)]   # ????????????????
                         flag = 1
                 else:
                     flag = 0
@@ -404,6 +404,7 @@ if __name__ == "__main__":
 
                 GLOBAL_STEP += 1
 
+                # 存储模型
                 if GLOBAL_STEP >= 600000 and GLOBAL_STEP % 30000 == 0:
                     t_MODEL_PATH = MODEL_PATH + str(EPISODE_COUNT) + '_' + str(GLOBAL_STEP) + '.pth'
                     state = {

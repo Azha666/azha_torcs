@@ -159,7 +159,7 @@ class TorcsEnv:
 
         pos = np.array(obs['trackPos'])  # 偏离轨道中心百分比 -1右  +1左
         track = np.array(obs['track'])  # 距离轨道边缘距离
-        sp = np.array(obs['speedX'])    # 纵向速度
+        sp = np.array(obs['speedX'])  # 纵向速度
 
         # 纵向速度控制：超出目标速度后，奖励值同样降低
 
@@ -173,11 +173,11 @@ class TorcsEnv:
             sp = 63.0 - ((sp - 34.0) - 63.0)
 
         lateral_offset = 0 - lateral_offset
-        # 车辆速度高，车头转角小， 与目标位置更贴近；速度应该被限制，
+        # 车辆速度越高，车头转角越小，与目标位置更贴近 → 奖励越高
         progress = sp * np.cos(obs['angle']) - np.abs(sp * np.sin(obs['angle'])) - 4 * sp * np.abs(pos - lateral_offset)
         reward = progress
 
-        # 横向偏离后，学习调整
+        # 横向偏离后，学习调整 两个偏移都在同一侧时 鼓励目标偏移量的方向发展
         if (pos - lateral_offset) * (obs_pre['trackPos'] - lateral_offset) >= 0.0 and (
                 obs_pre['trackPos'] - lateral_offset) != 0:
             if pos > lateral_offset and obs_pre['trackPos'] > pos:
@@ -185,6 +185,7 @@ class TorcsEnv:
             elif pos < lateral_offset and obs_pre['trackPos'] < pos:
                 reward = reward + sp * ((pos - obs_pre['trackPos']) / (lateral_offset - obs_pre['trackPos']))
 
+        # 速度过低 且施加刹车时 奖励值为负数
         if sp < 50.0 and this_action['brake'] > 0.0:
             reward = -100
         # if obs['trackPos'] > 0.5 and this_action['steer'] >= 0.0:
@@ -197,20 +198,23 @@ class TorcsEnv:
         # if obs['damage'] - obs_pre['damage'] > 0:
         #     reward = -1
 
-        # Termination judgement #########################
-        if track.min() < 0:  # Episode is terminated if the car is out of track
+        # Termination judgement 终止条件判断#########################
+        # Episode is terminated if the car is out of track 如果发生碰撞 奖励值为负数
+        if track.min() < 0:
             reward = -200
-            client.R.d['meta'] = True
+            client.R.d['meta'] = True  # meta False表示不做处理 True表示重启比赛
 
-        if self.time_step > self.terminal_judge_start:  # Episode terminates if the progress of agent is small
+        # Episode terminates if the progress of agent is small 一定步数后速度仍过低
+        if self.time_step > self.terminal_judge_start:
             if sp * np.cos(obs['angle']) < self.termination_limit_progress:
                 client.R.d['meta'] = True
 
-        if np.cos(obs['angle']) < 0:  # Episode is terminated if the agent runs backward
+        # Episode is terminated if the agent runs backward 车子向后跑 奖励值为负数
+        if np.cos(obs['angle']) < 0:
             reward = -200
             client.R.d['meta'] = True
 
-        if client.R.d['meta'] is True:  # Send a reset signal
+        if client.R.d['meta'] is True:  # Send a reset signal 发送重置信号
             self.initial_run = False
             client.respond_to_server()
 
