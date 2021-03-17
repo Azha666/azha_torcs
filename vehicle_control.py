@@ -86,6 +86,7 @@ class OU(object):
 
 # Actor网络
 class ANet(nn.Module):  # ae(s)=a
+    # 初始化
     def __init__(self):
         # 调用父类的初始化函数
         super(ANet, self).__init__()
@@ -118,7 +119,9 @@ class ANet(nn.Module):  # ae(s)=a
         return actions_value
 
 
-class CNet(nn.Module):  # ae(s)=a
+# Critic网络
+class CNet(nn.Module):  # ce(s,a)=q
+    # 初始化
     def __init__(self):
         # 调用父类的初始化函数
         super(CNet, self).__init__()
@@ -152,6 +155,7 @@ class CNet(nn.Module):  # ae(s)=a
 
 # agetn的DDPG算法
 class DDPG(object):
+    # 初始化
     def __init__(self):
 
         # 初始化两个Actor网络
@@ -227,6 +231,7 @@ class DDPG(object):
         self.memory[index, :] = transaction
         self.memory_counter += 1
 
+    # 网络参数更新
     def learn(self):
 
         # for x in self.Actor_target.state_dict().keys():
@@ -236,7 +241,7 @@ class DDPG(object):
         #     eval('self.Critic_target.' + x + '.data.mul_((1-TAU))')
         #     eval('self.Critic_target.' + x + '.data.add_(TAU*self.Critic_eval.' + x + '.data)')
 
-        # 软更新网络
+        # 软更新网络 (可考虑设置更新频率)
         tmp_weight = self.Actor_eval.state_dict()
         for k1, k2 in zip(self.Actor_eval.state_dict(), self.Actor_target.state_dict()):
             tmp_weight[k1].data = TAU * self.Actor_eval.state_dict()[k1].data + (1 - TAU) * \
@@ -261,36 +266,33 @@ class DDPG(object):
         b_s_ = Variable(torch.FloatTensor(b_memory[:, N_STATES + N_ACTIONS + 1: 2 * N_STATES + N_ACTIONS + 1]))
         b_done = Variable(torch.FloatTensor(b_memory[:, -1:]))
 
-        b_s = b_s.cuda()
-        b_a = b_a.cuda()
-        b_r = b_r.cuda()
-        b_s_ = b_s_.cuda()
-        b_done = b_done.cuda()
+        b_s = b_s.cuda()  # 真实state
+        b_a = b_a.cuda()  # 真实action
+        b_r = b_r.cuda()  # 真实奖励值
+        b_s_ = b_s_.cuda()  # 真实下一个state
+        b_done = b_done.cuda()  # 结束标识
 
-
-
-        a = self.Actor_eval(b_s)
-        q = self.Critic_eval(b_s, a)
-        loss_a = -torch.mean(q)
+        a = self.Actor_eval(b_s)  # 根据真实state预测的action
+        q = self.Critic_eval(b_s, a)  # 根据真实state和预测action预测的Q值
+        loss_a = -torch.mean(q)  # 计算actor网络的loss
         # self.cost_his_a.append(loss_a)
-        self.atrain.zero_grad()
-        loss_a.backward()
-        self.atrain.step()
+        self.atrain.zero_grad()  # 清空过往梯度
+        loss_a.backward()  # 反向传播 计算当前梯度
+        self.atrain.step()  # 根据梯度更新网络参数
 
-        q_v = self.Critic_eval(b_s, b_a)
-        a_ = self.Actor_target(b_s_)
-        q_target = self.Critic_target(b_s_, a_).detach()
+        q_v = self.Critic_eval(b_s, b_a)    # 根据真实state和真实action预测的Q值
+        a_ = self.Actor_target(b_s_)    # 根据真实的下一个state预测的action
+        q_target = self.Critic_target(b_s_, a_).detach()    # 切断q_target的反向传播 让其梯度对主网络的梯度造成影响
         for k in range(BATCH_SIZE):
             if b_done[k]:
                 q_target[k] = b_r[k]
             else:
-                q_target[k] = b_r[k] + GAMMA_REWARD * q_target[k]
-
+                q_target[k] = b_r[k] + GAMMA_REWARD * q_target[k]   # y_i = r_t + γ * Q'(s_t+1, π'(s+t+1|θ') | θ_Q')
         loss_c = self.loss_td(q_v, q_target)
         # self.cost_his_c.append(loss_c)
-        self.ctrain.zero_grad()
-        loss_c.backward()
-        self.ctrain.step()
+        self.ctrain.zero_grad() # 清空过往梯度
+        loss_c.backward()   # 反向传播，计算当前梯度
+        self.ctrain.step()  # 根据梯度更新网络参数
 
         if GLOBAL_STEP > 20100:
             self.epsilon_increment = self.epsilon_increment + 1
@@ -394,7 +396,7 @@ if __name__ == "__main__":
                 flag = 0
                 if GLOBAL_STEP >= 20000:
                     if GLOBAL_STEP % 10000 == 0:
-                        lateral_offset = offset[int(((GLOBAL_STEP - 10000) / 10000) % 4)]   # ????????????????
+                        lateral_offset = offset[int(((GLOBAL_STEP - 10000) / 10000) % 4)]  # ????????????????
                         flag = 1
                 else:
                     flag = 0

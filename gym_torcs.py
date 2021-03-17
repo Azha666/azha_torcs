@@ -257,12 +257,15 @@ class TorcsEnv:
         # 返回观察内容
         return self.get_obs()
 
+    # 关闭torcs
     def end(self):
         os.system('pkill torcs')
 
+    # 返回观察内容
     def get_obs(self):
         return self.observation
 
+    # 重启torcs
     def reset_torcs(self):
         # print("relaunch torcs")
         os.system('pkill torcs')
@@ -295,6 +298,7 @@ class TorcsEnv:
 
         return torcs_action
 
+    # 将观察向量转换为RGB通道
     def obs_vision_to_image_rgb(self, obs_image_vec):
         image_vec = obs_image_vec
         rgb = []
