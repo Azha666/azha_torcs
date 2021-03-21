@@ -47,7 +47,7 @@ class TorcsEnv:
         else:
             os.system('torcs  -nofuel -nodamage -nolaptime &')  # 终端执行运行torcs终端的命令，并且不包含图像
         time.sleep(0.5)  # 休眠0.5秒
-        os.system('sh autostartmap.sh')  # 命令行执行脚本 按键
+        os.system('sh autostart.sh')  # 命令行执行脚本 按键
         time.sleep(0.5)  # 休眠0.5秒
 
         """
@@ -275,7 +275,7 @@ class TorcsEnv:
         else:
             os.system('torcs -nofuel -nodamage -nolaptime &')
         time.sleep(0.5)
-        os.system('sh autostartmap.sh')
+        os.system('sh autostart.sh')
         time.sleep(0.5)
 
     # 将网络输出的action转换为torcs的输入

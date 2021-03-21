@@ -30,7 +30,7 @@ restor = True  # 恢复模型标识
 is_train = False  # 训练标识
 MODEL_PATH = '/home/azha/Torcs/azha_torcs/ckpt/plain_torcs_ddpg_'  # 模型存储路径
 
-RESTORE_MODEL_PATH = '/home/azha/Torcs/azha_torcs/ckpt/vehicle_control_ddpg_2569_1440000.pth'  # 模型加载路径
+RESTORE_MODEL_PATH = '/home/azha/Torcs/azha_torcs/model_train/plain_torcs_ddpg_6474_1350000.pth'  # 模型加载路径
 np.random.seed(1337)  # 随机数生成
 ###############################  DDPG  ####################################
 
