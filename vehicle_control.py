@@ -226,7 +226,7 @@ class DDPG(object):
     # 将一回合经理存储到经验回放池
     def store_transaction(self, s, a, r, s_, done):
         transaction = np.hstack((s, a, [r], s_, [done]))
-        # replace the old memory with new memory
+        # replace the old memory with new memory 替换旧的transition
         index = self.memory_counter % MEMORY_CAPACITY
         self.memory[index, :] = transaction
         self.memory_counter += 1
@@ -329,8 +329,7 @@ def handle_ob(ob):
 
 if __name__ == "__main__":
 
-    # Generate a Torcs environment 创建一个Torcs环境
-    env = TorcsEnv(vision=vision, throttle=True)
+    env = TorcsEnv(vision=vision, throttle=True)    # Generate a Torcs environment 创建一个Torcs环境
     agent = DDPG()  # 创建一个采用DDPG算法的agent
 
     # 加载已有模型
@@ -396,7 +395,7 @@ if __name__ == "__main__":
                 flag = 0
                 if GLOBAL_STEP >= 20000:
                     if GLOBAL_STEP % 10000 == 0:
-                        lateral_offset = offset[int(((GLOBAL_STEP - 10000) / 10000) % 4)]  # ????????????????
+                        lateral_offset = offset[int(((GLOBAL_STEP - 10000) / 10000) % 4)]  # 使不同的偏移量取值都能得到训练
                         flag = 1
                 else:
                     flag = 0
