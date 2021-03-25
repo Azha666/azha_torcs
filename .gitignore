@@ -5,3 +5,4 @@
 .DS_Store
 .DS_Store?
 /model_train/
+/ckpt/model_ddpg_2_1318_185000.pth
