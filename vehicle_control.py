@@ -30,7 +30,7 @@ restor = True  # 恢复模型标识
 is_train = False  # 训练标识
 MODEL_PATH = '/home/azha/Torcs/azha_torcs/ckpt/plain_torcs_ddpg_'  # 模型存储路径
 
-RESTORE_MODEL_PATH = '/home/azha/Torcs/azha_torcs/model_train/plain_torcs_ddpg_6474_1350000.pth'  # 模型加载路径
+RESTORE_MODEL_PATH = '/home/azha/Torcs/azha_torcs/ckpt/vehicle_control_ddpg_2569_1500000.pth'  # 模型加载路径
 np.random.seed(1337)  # 随机数生成
 ###############################  DDPG  ####################################
 
@@ -111,9 +111,9 @@ class ANet(nn.Module):  # ae(s)=a
         steer = self.Steering(x)  # 得到转角输出
         steer = torch.tanh(steer)  # 使用tanh激活函数处理转角输出
         accel = self.Acceleration(x)  # 得到加速输出
-        accel = torch.sigmoid(accel)  # 使用tanh激活函数处理加速输出
+        accel = torch.sigmoid(accel)  # 使用sigmoid激活函数处理加速输出
         brake = self.Brake(x)  # 得到刹车输出
-        brake = torch.sigmoid(brake)  # 使用tanh激活函数处理刹车输出
+        brake = torch.sigmoid(brake)  # 使用sigmoid激活函数处理刹车输出
 
         actions_value = torch.cat([steer, accel, brake], dim=-1)  # 拼接三个动作，得到action的值
         return actions_value
